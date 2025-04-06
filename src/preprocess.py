@@ -7,7 +7,7 @@ face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_fronta
 
 # Paths (relative to project root)
 input_dataset_path = "C:/Users/Prarthana/Downloads/dba_39"
-output_dataset_path = "C:/Users/Prarthana/Downloads/processed_dataset"
+output_dataset_path = "../processed_dataset"
 
 # Create output directory if it doesn't exist
 if not os.path.exists(output_dataset_path):
