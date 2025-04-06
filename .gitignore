@@ -177,3 +177,5 @@ dataset/
 processed_dataset/
 *.pyc
 __pycache__/
+facenet_keras_weights.h5
+face_env/
