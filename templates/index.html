@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Attendance Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #2c3e50, #34495e);
+      color: #ecf0f1;
+      margin: 0;
+      padding: 40px 60px;
+    }
+
+    h1, h2 {
+      margin-bottom: 20px;
+      letter-spacing: 1px;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 40px;
+      max-width: 1600px;
+      margin: 0 auto;
+      align-items: flex-start;
+    }
+
+    .video-container, .dashboard {
+      background: #3c5972;
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .video-feed {
+      width: 100%;
+      border: 5px solid #1abc9c;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      padding: 14px 18px;
+      border: 1px solid #7f8c8d;
+      text-align: left;
+      font-size: 15px;
+    }
+
+    th {
+      background: #2980b9;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .on-time {
+      color: #2ecc71;
+      font-weight: 600;
+    }
+
+    .late {
+      color: #e74c3c;
+      font-weight: 600;
+    }
+
+    .late-alert {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #e74c3c;
+      color: white;
+      padding: 14px 28px;
+      border-radius: 8px;
+      display: none;
+      font-size: 18px;
+      font-weight: bold;
+      animation: pulse 1s ease-in-out infinite;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
+      z-index: 9999;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translateX(-50%) scale(1); }
+      50% { transform: translateX(-50%) scale(1.05); }
+    }
+
+    button {
+      background: linear-gradient(to right, #3498db, #1abc9c);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 25px;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background: linear-gradient(to right, #1abc9c, #3498db);
+      transform: scale(1.05);
+    }
+
+    .summary {
+      font-size: 17px;
+      margin-top: 20px;
+      font-weight: 500;
+    }
+
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #95a5a6;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="video-container">
+      <h1>📹 Live Feed</h1>
+      <img src="{{ url_for('video_feed') }}" class="video-feed" alt="Live Video Feed">
+    </div>
+    <div class="dashboard">
+      <h2>📋 Attendance Log</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Timestamp</th>
+            <th>Status</th>
+            <th>Slot</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for line in log.splitlines()[1:] %}
+            {% set parts = line.split(',') %}
+            {% if parts|length >= 4 %}
+              <tr>
+                <td>{{ parts[0] }}</td>
+                <td>{{ parts[1] }}</td>
+                <td class="{{ 'on-time' if parts[2] == 'On Time' else 'late' }}">{{ parts[2] }}</td>
+                <td>{{ parts[3] }}</td>
+              </tr>
+            {% endif %}
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="summary">👥 Total Latecomers after 9:30 AM: <strong>{{ late_count }}</strong></p>
+      <button onclick="window.location.href='/download'">⬇️ Download CSV</button>
+    </div>
+  </div>
+
+  <div id="late-alert" class="late-alert">⚠️ Latecomer After 9:30!</div>
+
+  <script>
+    function playLateSound() {
+      const audio = new Audio('https://www.soundjay.com/buttons/beep-07.wav');
+      audio.play();
+      const alert = document.getElementById('late-alert');
+      alert.style.display = 'block';
+      setTimeout(() => { alert.style.display = 'none'; }, 3000);
+    }
+
+    setInterval(() => {
+      fetch('/check_late')
+        .then(response => response.json())
+        .then(data => {
+          if (data.late) playLateSound();
+        });
+    }, 1000);
+  </script>
+</body>
+</html>
