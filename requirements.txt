@@ -5,3 +5,4 @@ pandas==2.2.2
 tensorflow==2.16.1
 Pillow==10.3.0
 tf_keras==2.16.0
+mtcnn==0.1.1

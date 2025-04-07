@@ -6,7 +6,6 @@ import csv
 from datetime import datetime
 import os
 from collections import defaultdict
-import winsound  # For Windows sound (use 'beep' on Linux/macOS)
 
 # Paths
 known_faces_path = "../known_faces.pkl"
@@ -40,14 +39,17 @@ while True:
         # Extract embedding and face coordinates
         result = DeepFace.represent(frame, model_name="Facenet", enforce_detection=True, detector_backend="opencv")
         embedding = result[0]["embedding"]
-        face_coords = result[0]["facial_area"]  # x, y, w, h
+        face_coords = result[0]["facial_area"]
 
         # Compare with known embeddings
         distances = [np.linalg.norm(embedding - known_emb) for known_emb in known_embeddings]
         min_distance_idx = np.argmin(distances)
         min_distance = distances[min_distance_idx]
-        threshold = 0.6
+        threshold = 1.2
         name = known_names[min_distance_idx] if min_distance < threshold else "Unknown"
+
+        # Debug info
+        print(f"Closest match: {known_names[min_distance_idx]}, Distance: {min_distance:.2f}")
 
         # Draw bounding box and label
         x, y, w, h = face_coords["x"], face_coords["y"], face_coords["w"], face_coords["h"]
@@ -67,15 +69,15 @@ while True:
             print(f"Attendance logged for {name}")
             last_logged[name] = current_time
             attendance_count += 1
-            winsound.Beep(1000, 200)  # Beep sound (frequency, duration in ms)
 
         # Display attendance count
         cv2.putText(frame, f"Attendance: {attendance_count}", (10, 30), 
                     cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     except Exception as e:
+        print(f"Detection failed: {str(e)}")
         cv2.putText(frame, "No face detected", (10, 30), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
 
     cv2.imshow("Attendance System", frame)
     if cv2.waitKey(1) & 0xFF == ord("q"):
