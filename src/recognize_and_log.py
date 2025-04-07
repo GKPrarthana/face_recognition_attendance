@@ -6,6 +6,8 @@ import csv
 from datetime import datetime, time
 import os
 from collections import defaultdict
+import winsound
+import time as time_module  # To add a pause between beeps
 
 # Paths
 known_faces_path = "../known_faces.pkl"
@@ -23,6 +25,7 @@ SLOT_1_LATE = time(8, 5)     # 8:05 AM
 SLOT_2_START = time(11, 30)  # 11:30 AM
 SLOT_2_END = time(14, 30)    # 2:30 PM
 SLOT_2_LATE = time(11, 35)   # 11:35 AM
+LATE_SOUND_CUTOFF = time(9, 30)  # 9:30 AM for sound alert
 
 # Track logs per slot per student (date -> name -> slot)
 logged_today = defaultdict(lambda: defaultdict(set))
@@ -72,7 +75,7 @@ while True:
         distances = [np.linalg.norm(embedding - known_emb) for known_emb in known_embeddings]
         min_distance_idx = np.argmin(distances)
         min_distance = distances[min_distance_idx]
-        threshold = 1.2  # Adjust if needed after testing
+        threshold = 1.2  # Adjust if needed
         name = known_names[min_distance_idx] if min_distance < threshold else "Unknown"
 
         # Debug info
@@ -99,6 +102,14 @@ while True:
                 writer.writerow([name, current_time.strftime("%Y-%m-%d %H:%M:%S"), status, slot])
             print(f"Attendance logged for {name}: {status} - {slot}")
             logged_today[current_date][name].add(slot)
+
+            # Sound alert for latecomers after 9:30 AM in Slot 1
+            if slot == "Slot 1 (8:00-11:00)" and status == "Late" and current_time.time() >= LATE_SOUND_CUTOFF:
+                # Double beep: softer tone (500 Hz), 200 ms each, with a 100 ms pause
+                winsound.Beep(500, 200)
+                time_module.sleep(0.1)  # Pause between beeps
+                winsound.Beep(500, 200)
+                print("Latecomer alert sounded!")
 
         # Display current slot
         slot_display = slot if slot else "Outside lecture hours"
